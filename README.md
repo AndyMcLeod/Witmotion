@@ -196,7 +196,8 @@ witmotion/
   server.py       HTTP + SSE API and static files
   cli.py          command line
   web/            browser console (HTML/CSS/JS, no dependencies)
-assets/           app icon
+assets/           app icon (built by tools/make_icon.py)
+tools/            icon builder
 start-witmotion.bat, create-shortcut.ps1   Windows launcher + desktop shortcut
 tests/
 ```
