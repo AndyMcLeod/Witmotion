@@ -35,6 +35,19 @@ python -m witmotion scan                      # find sensors on USB-serial ports
 
 Or install it as a command: `pip install .` then run `witmotion`.
 
+### Windows desktop launcher
+
+`start-witmotion.bat` starts the console and opens the browser. It installs `pyserial` the first time if
+it's missing, and if the console is already running it just opens the browser. Recordings and settings
+go to `witmotion-data\` next to the batch file. To put a **WitMotion Console** icon on your desktop:
+
+```bash
+powershell -ExecutionPolicy Bypass -File create-shortcut.ps1
+```
+
+Closing the console window stops the engine and releases the serial port, so close it before using
+WitMotion's own software on the same port.
+
 ## Supported hardware
 
 | Model | Interface | Protocol | Status |
@@ -183,6 +196,8 @@ witmotion/
   server.py       HTTP + SSE API and static files
   cli.py          command line
   web/            browser console (HTML/CSS/JS, no dependencies)
+assets/           app icon
+start-witmotion.bat, create-shortcut.ps1   Windows launcher + desktop shortcut
 tests/
 ```
 
