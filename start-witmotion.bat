@@ -11,7 +11,8 @@ where python >nul 2>nul
 if errorlevel 1 goto :nopython
 
 rem Already running? Just open the browser instead of starting a second copy.
-curl.exe -s -m 2 -o nul "%URL%api/status" >nul 2>nul
+rem (Short connect timeout: Windows takes ~2 s to report a refused localhost port.)
+curl.exe -s --connect-timeout 0.5 -m 2 -o nul "http://127.0.0.1:8765/api/status" >nul 2>nul
 if not errorlevel 1 goto :running
 
 python -c "import serial" >nul 2>nul
