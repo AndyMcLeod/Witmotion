@@ -19,7 +19,7 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/amcleodUNH/Witmotion"
+Homepage = "https://github.com/AndyMcLeod/Witmotion"
 
 [project.scripts]
 witmotion = "witmotion.cli:main"
