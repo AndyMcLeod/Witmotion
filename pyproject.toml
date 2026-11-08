@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "witmotion"
+version = "0.1.0"
+description = "Python engine and browser console for WitMotion tilt / IMU sensors (WT901C-485 and friends)"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+dependencies = ["pyserial>=3.4"]
+keywords = ["witmotion", "imu", "inclinometer", "modbus", "rs485", "wt901c"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.urls]
+Homepage = "https://github.com/amcleodUNH/Witmotion"
+
+[project.scripts]
+witmotion = "witmotion.cli:main"
+
+[tool.setuptools]
+packages = ["witmotion", "witmotion.web"]
+
+[tool.setuptools.package-data]
+"witmotion.web" = ["*.html", "*.css", "*.js", "*.svg"]

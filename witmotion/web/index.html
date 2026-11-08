@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WitMotion Console</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M3 12h18M12 2.5c3 3 3 16 0 19"/></svg>
+    <span>WitMotion <em>Console</em></span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-view="dashboard" aria-selected="true">Dashboard</button>
+    <button role="tab" data-view="device">Device</button>
+    <button role="tab" data-view="registers">Registers</button>
+    <button role="tab" data-view="recordings">Recordings</button>
+  </nav>
+  <div class="top-actions">
+    <button class="pill" id="status-pill" title="Connection">
+      <span class="dot"></span><span id="status-text">Starting…</span>
+    </button>
+    <button class="btn rec" id="btn-record" disabled><span class="rec-dot"></span><span>Record</span></button>
+  </div>
+</header>
+
+<main>
+  <!-- ============================== DASHBOARD ============================== -->
+  <section class="view" id="view-dashboard">
+    <div class="readouts">
+      <div class="readout x"><label>Roll <small>X</small></label><output id="ro-roll">—</output><span class="unit">°</span></div>
+      <div class="readout y"><label>Pitch <small>Y</small></label><output id="ro-pitch">—</output><span class="unit">°</span></div>
+      <div class="readout z"><label>Yaw <small>Z</small></label><output id="ro-yaw">—</output><span class="unit">°</span></div>
+      <div class="readout"><label>Tilt <small>from level</small></label><output id="ro-tilt">—</output><span class="unit">°</span></div>
+      <div class="readout"><label>Temperature</label><output id="ro-temp">—</output><span class="unit">°C</span></div>
+      <div class="readout-actions">
+        <button class="btn small" id="btn-tare" title="Make the current angles read zero (display only)">Zero display</button>
+        <button class="btn small ghost" id="btn-untare" hidden>Clear zero</button>
+        <span class="badge" id="tare-badge" hidden>relative</span>
+      </div>
+    </div>
+
+    <div class="instruments">
+      <figure class="card instrument">
+        <figcaption>Level <button class="link" id="level-range" title="Change range">±5°</button></figcaption>
+        <canvas id="cv-level" aria-label="Bubble level"></canvas>
+      </figure>
+      <figure class="card instrument">
+        <figcaption>Orientation</figcaption>
+        <canvas id="cv-cube" aria-label="3D orientation"></canvas>
+      </figure>
+      <figure class="card instrument">
+        <figcaption>Yaw</figcaption>
+        <canvas id="cv-compass" aria-label="Yaw dial"></canvas>
+      </figure>
+    </div>
+
+    <div class="vectors">
+      <div class="card vec"><h3>Acceleration <span class="unit">g</span></h3>
+        <dl><dt class="x">X</dt><dd id="v-ax">—</dd><dt class="y">Y</dt><dd id="v-ay">—</dd><dt class="z">Z</dt><dd id="v-az">—</dd><dt>|a|</dt><dd id="v-an">—</dd></dl></div>
+      <div class="card vec"><h3>Angular velocity <span class="unit">°/s</span></h3>
+        <dl><dt class="x">X</dt><dd id="v-gx">—</dd><dt class="y">Y</dt><dd id="v-gy">—</dd><dt class="z">Z</dt><dd id="v-gz">—</dd></dl></div>
+      <div class="card vec"><h3>Magnetic field <span class="unit">LSB</span></h3>
+        <dl><dt class="x">X</dt><dd id="v-hx">—</dd><dt class="y">Y</dt><dd id="v-hy">—</dd><dt class="z">Z</dt><dd id="v-hz">—</dd><dt>|h|</dt><dd id="v-hn">—</dd></dl></div>
+      <div class="card vec"><h3>Quaternion</h3>
+        <dl><dt>q0</dt><dd id="v-q0">—</dd><dt>q1</dt><dd id="v-q1">—</dd><dt>q2</dt><dd id="v-q2">—</dd><dt>q3</dt><dd id="v-q3">—</dd></dl></div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div class="seg" id="chart-a-select">
+          <button data-set="tilt" aria-pressed="true">Roll &amp; pitch</button>
+          <button data-set="yaw">Yaw</button>
+          <button data-set="acc">Acceleration</button>
+          <button data-set="gyro">Angular velocity</button>
+          <button data-set="mag">Magnetic</button>
+        </div>
+        <div class="seg" id="chart-window">
+          <button data-win="10">10 s</button>
+          <button data-win="30" aria-pressed="true">30 s</button>
+          <button data-win="60">1 min</button>
+          <button data-win="300">5 min</button>
+        </div>
+        <button class="btn small ghost" id="btn-pause">Pause</button>
+      </div>
+      <canvas id="cv-chart-a" class="chart"></canvas>
+      <div class="legend" id="legend-a"></div>
+    </div>
+  </section>
+
+  <!-- ============================== DEVICE ============================== -->
+  <section class="view" id="view-device" hidden>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h2>Sensor</h2>
+          <button class="btn small" id="btn-read-config">Read configuration</button></div>
+        <dl class="kv" id="device-info">
+          <dt>Connection</dt><dd id="di-conn">—</dd>
+          <dt>Firmware</dt><dd id="di-fw">—</dd>
+          <dt>Bandwidth</dt><dd id="di-bw">—</dd>
+          <dt>Algorithm</dt><dd id="di-alg">—</dd>
+          <dt>Installation</dt><dd id="di-orient">—</dd>
+          <dt>Ranges</dt><dd id="di-range">—</dd>
+          <dt>Angle reference</dt><dd id="di-ref">—</dd>
+          <dt>RS-485 reply delay</dt><dd id="di-delay">—</dd>
+          <dt>Sensor clock</dt><dd><span id="di-clock">—</span> <button class="link" id="btn-sync-clock">Sync to PC</button></dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Settings</h2></div>
+        <form class="settings" id="settings-form" onsubmit="return false">
+          <label for="set-bandwidth">Bandwidth</label>
+          <select id="set-bandwidth"></select>
+          <button class="btn small" data-apply="set_bandwidth" data-src="set-bandwidth">Apply</button>
+
+          <label for="set-algorithm">Fusion algorithm</label>
+          <select id="set-algorithm"></select>
+          <button class="btn small" data-apply="set_algorithm" data-src="set-algorithm">Apply</button>
+
+          <label for="set-orientation">Installation</label>
+          <select id="set-orientation"></select>
+          <button class="btn small" data-apply="set_orientation" data-src="set-orientation">Apply</button>
+
+          <label for="set-baud">Sensor baud rate</label>
+          <select id="set-baud"></select>
+          <button class="btn small warn" data-apply="set_baudrate" data-src="set-baud"
+                  data-confirm="Change the sensor's baud rate? The console will follow it automatically.">Apply</button>
+
+          <label for="set-address">Modbus address</label>
+          <input id="set-address" placeholder="0x50" spellcheck="false" autocomplete="off">
+          <button class="btn small warn" data-apply="set_address" data-src="set-address" data-hex
+                  data-confirm="Change the sensor's Modbus address?">Apply</button>
+
+          <label for="set-rate">Host poll rate (Hz)</label>
+          <input id="set-rate" type="number" min="0.1" max="200" step="1">
+          <button class="btn small" data-apply="set_rate" data-src="set-rate" data-param="rate_hz">Apply</button>
+        </form>
+        <p class="hint">Sensor settings are unlocked, written, and saved to flash in one step, the same sequence the WitMotion PC software uses.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Calibration</h2></div>
+        <div class="cal-row">
+          <div><h4>Accelerometer</h4><p>Place the sensor on a level, still surface. Takes about 5 seconds.</p></div>
+          <button class="btn" id="btn-cal-acc">Calibrate</button>
+        </div>
+        <div class="cal-row">
+          <div><h4>Heading</h4><p>Make the current yaw read 0°.</p></div>
+          <button class="btn" data-cmd="zero_heading">Zero yaw</button>
+        </div>
+        <div class="cal-row">
+          <div><h4>Angle reference</h4><p>Store the current roll and pitch as the sensor's zero (saved on the sensor).</p></div>
+          <div class="btn-col">
+            <button class="btn" data-cmd="angle_reference" data-confirm="Store the current roll/pitch as zero on the sensor?">Set reference</button>
+            <button class="btn ghost" data-cmd="clear_angle_reference">Clear</button>
+          </div>
+        </div>
+        <div class="cal-row">
+          <div><h4>Configuration</h4><p>Save the current configuration, or restore factory defaults. A factory reset may change the baud rate and address.</p></div>
+          <div class="btn-col">
+            <button class="btn ghost" data-cmd="save">Save</button>
+            <button class="btn danger" data-cmd="factory_reset" data-confirm="Restore factory settings? Calibration will be lost and the baud rate / address may change.">Factory reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Magnetometer calibration</h2>
+          <div class="btn-row">
+            <button class="btn" id="btn-mag-start">Start</button>
+            <button class="btn" id="btn-mag-stop" disabled>Finish</button>
+          </div></div>
+        <p class="hint" id="mag-hint">Keep away from metal and magnets. Press Start, then slowly rotate the sensor a full turn around each of its X, Y and Z axes. Press Finish when the three ellipses look complete.</p>
+        <canvas id="cv-mag" class="mag"></canvas>
+        <div class="legend"><span><i class="x"></i>X–Y</span><span><i class="y"></i>Y–Z</span><span><i class="z"></i>X–Z</span><span id="mag-count"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== REGISTERS ============================== -->
+  <section class="view" id="view-registers" hidden>
+    <div class="card">
+      <div class="card-head">
+        <h2>Registers</h2>
+        <div class="btn-row">
+          <input id="reg-filter" placeholder="Filter…" spellcheck="false">
+          <label class="check"><input type="checkbox" id="reg-auto"> Auto-refresh</label>
+          <label class="check"><input type="checkbox" id="reg-save"> Save writes to flash</label>
+          <button class="btn small" id="btn-reg-read">Read all</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="regs">
+          <thead><tr><th>Addr</th><th>Name</th><th>Description</th><th class="num">Raw</th><th>Hex</th><th class="num">Value</th><th>Meaning</th><th>Write</th></tr></thead>
+          <tbody id="reg-body"><tr><td colspan="8" class="empty">Connect a sensor and press “Read all”.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="hint">Writes unlock the sensor first (0x69 = 0xB588). Values are 16-bit; enter decimal or 0x-prefixed hex.</p>
+    </div>
+  </section>
+
+  <!-- ============================== RECORDINGS ============================== -->
+  <section class="view" id="view-recordings" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Record to CSV</h2></div>
+      <div class="rec-controls">
+        <input id="rec-name" placeholder="Optional label, e.g. bridge-deck-run-1" spellcheck="false">
+        <button class="btn" id="btn-rec-start">Start recording</button>
+        <button class="btn danger" id="btn-rec-stop" disabled>Stop</button>
+      </div>
+      <p class="hint" id="rec-status">Not recording.</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Files</h2><button class="btn small ghost" id="btn-rec-refresh">Refresh</button></div>
+      <p class="hint" id="rec-dir"></p>
+      <div class="table-wrap">
+        <table class="files"><thead><tr><th>File</th><th class="num">Size</th><th>Modified</th><th></th></tr></thead>
+          <tbody id="rec-files"><tr><td colspan="4" class="empty">No recordings yet.</td></tr></tbody></table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============================== CONNECT DIALOG ============================== -->
+<dialog id="connect-dialog">
+  <form method="dialog" class="connect" id="connect-form">
+    <h2>Connect sensor</h2>
+    <label for="c-port">Serial port</label>
+    <div class="row">
+      <select id="c-port"></select>
+      <button type="button" class="btn small ghost" id="btn-ports-refresh" title="Refresh port list">↻</button>
+    </div>
+    <label for="c-protocol">Protocol</label>
+    <select id="c-protocol">
+      <option value="modbus">Modbus RTU (RS-485 models, e.g. WT901C-485)</option>
+      <option value="standard">WitMotion standard 0x55 (TTL / RS-232 models)</option>
+      <option value="simulated">Simulator (no hardware)</option>
+    </select>
+    <div class="row2">
+      <div><label for="c-baud">Baud rate</label><select id="c-baud"></select></div>
+      <div><label for="c-address">Address</label><input id="c-address" value="0x50" spellcheck="false"></div>
+      <div><label for="c-rate">Poll rate (Hz)</label><input id="c-rate" type="number" min="0.1" max="200" value="50"></div>
+    </div>
+    <div class="scan">
+      <button type="button" class="btn ghost" id="btn-scan">Scan for sensors</button>
+      <span class="hint" id="scan-status"></span>
+      <ul id="scan-results"></ul>
+    </div>
+    <p class="error" id="connect-error" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn ghost" id="btn-disconnect">Disconnect</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn ghost" id="btn-connect-cancel">Close</button>
+      <button type="button" class="btn primary" id="btn-connect">Connect</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script src="instruments.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
